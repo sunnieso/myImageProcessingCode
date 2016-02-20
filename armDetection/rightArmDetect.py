@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 '''
-example to detect upright people in images using HOG features
-
 Usage:
-    peopledetect.py <image_names>
+    rightArmDetect.py 
+    OR,
+    rightArmDetect.py {video filename}
 
+take in a video of (a) human and detect the human's right arm movement.
 Press any key to continue, ESC to stop.
 '''
 
@@ -19,6 +20,7 @@ import cv2
 import time
 
 
+# return true if rectangle r is inside rectangle q      
 def inside(r, q):
     rx, ry, rw, rh = r
     qx, qy, qw, qh = q
@@ -39,7 +41,7 @@ def draw_detections(img, rects, thickness = 1, color = (0,255,0)):
 def detectArm(adjustedTarget,target,area):
     # extract the right arm 
     # number of pixel that needs to be white:
-    white = area / 4
+    white = (area / 4)/20
     # expand target width to make sure that it includes arms
     
     print("enter detectArm function")
@@ -61,7 +63,16 @@ if __name__ == '__main__':
 
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector( cv2.HOGDescriptor_getDefaultPeopleDetector() )
-    cap = cv2.VideoCapture(0)
+
+    if(len(sys.argv) != 1):
+        try:
+            # read from video input
+            cap = cv2.VideoCapture(sys.argv[1])
+        except:
+            # fail to read from input, read from webcam then.
+            cap = cv2.VideoCapture(0)
+    else:               
+        cap = cv2.VideoCapture(0)
     # self.prev = self.getImageFromCamera()
     cv2.namedWindow('vid')
     cv2.namedWindow("After NMS")
@@ -74,18 +85,12 @@ if __name__ == '__main__':
 
     while(True):
         ret, img = cap.read()
+        if(img == None):
+            print("EOF")
+            break
         orig = img.copy()
 
         cv2.imshow('vid',img)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
-        # cv2.imwrite('./tmpIm/img_' + str(k) + '.jpg', img)
-        # k += 1 
-        # time.sleep(1)
-        # if(k >= 10):
-        #     break
-        # continue
-
 
         found, w = hog.detectMultiScale(img, winStride=(4,4), padding=(8,8), scale=1.05)
         found_filtered = []
@@ -95,21 +100,15 @@ if __name__ == '__main__':
                     break
             else:
                 found_filtered.append(r)
-        # draw_detections(orig, found_filtered, 3)
-        
-        # apply non-maxima suppression to the bounding boxes using a
-        # fairly large overlap threshold to try to maintain overlapping
-        # boxes that are still people
-        # found_filtered = np.array([[x, y, x + w, y + h] for (x, y, w, h) in found_filtered])
-        # pick = non_max_suppression(found_filtered, probs=None, overlapThresh=1)
-        # get background subtractor at right half of the target
+
+
         fgmask = fgbg.apply(orig)
 
         if len(found_filtered):
             target = [max(found_filtered, key = lambda x: x[2] * x[3])]
             area = target[0][2] * target[0][3]
             print("area = {}".format(target[0][2] * target[0][3]))
-            if area > 30000:
+            if area > 3000:
                 draw_detections(img, target, 3, (0,0,255))
                 # get the area for arm 
                 # try:
@@ -125,9 +124,10 @@ if __name__ == '__main__':
                 if(detectArm(adjustedTarget,target,area)):
 
                     # cv2.putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
-                    cv2.PutText(img,"Arm Raised", (adjustedTarget[0],adjustedTarget[1]),cv2.FONT_HERSHEY_SIMPLEX,2,(0,50,100))
+                    cv2.putText(img,"Arm Raised", (x1,y1),cv2.FONT_HERSHEY_SIMPLEX,2,(0,50,100))
+                    time.sleep(2)
                 else: 
-                    print("detectArm fails. invalid target located at the side")
+                    print("detectArm fails.")
                     
 
         cv2.imshow('BackgroundSubtractor',fgmask)
