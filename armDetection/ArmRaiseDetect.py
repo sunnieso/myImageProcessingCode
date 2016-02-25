@@ -74,9 +74,10 @@ def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object =
     drawing = np.zeros(img.shape,np.uint8)
 
     max_area=-1
-    
+    handDetected = False;
 
     if (len(contours) != 0):       
+        handDetected = False;
        #  find the biggest contour
         for i in range(len(contours)):
             cnt=contours[i]
@@ -98,7 +99,7 @@ def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object =
                  
             # draw contours 
             centr=(cx,cy)       
-            cv2.circle(img,centr,5,[0,0,255],2)       
+            cv2.circle(img,centr,3,[0,0,255],2)       
             cv2.drawContours(drawing,[cnt],0,color1,2) 
             cv2.drawContours(drawing,[hull],0,color2,2) 
             
@@ -138,6 +139,7 @@ def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object =
                 print("ratio = {}".format(ratio))
                 # 3 is the threshold I get after testing 
                 if(ratio < 3):
+                    handDetected = True;
                     cv2.putText(img, "hand", (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color3, 2)
                     deq.append(centr)
 
@@ -146,17 +148,18 @@ def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object =
                   # cv2.putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
                         # cv2.putText(img,"Arm Raised", (x1,y1),cv2.FONT_HERSHEY_SIMPLEX,2,(0,50,100))
                 # cv2.circle() 
-    k = 0
-    handRaised = 5
-    for pt in deq:
-        print ("pt = {}".format(pt))
-        if(k != 0 and deq[k][1] < deq[k-1][1]):
-            handRaised -= 1
-        k+=1
-        cv2.circle(img,pt,k,color2,-1)
-    if(handRaised <= 0):
-        print("arm raised detected!!")
-        cv2.putText(img, "Arm raised!", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 1, color3, 3)
+    if(handDetected):
+        k = 0
+        handRaised = 5
+        for pt in deq:
+            # print ("pt = {}".format(pt))
+            if(k != 0 and deq[k][1] < deq[k-1][1]):
+                handRaised -= 1
+            k+=1
+            cv2.circle(img,pt,k,RED,-1)
+        if(handRaised <= 0):
+            print("arm raised detected!!")
+            cv2.putText(img, "Arm raised!", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 1, color3, 3)
                 
     return img
 
