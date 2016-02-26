@@ -6,7 +6,7 @@ Usage:
     OR,
     rightArmDetect.py {video filename}
 
-take in a video of (a) human and detect the human's right arm movement.
+take in a video of (a) human and detect the human's arm movement.
 Press any key to continue, ESC to stop.
 '''
 
@@ -14,8 +14,6 @@ Press any key to continue, ESC to stop.
 from __future__ import print_function
 
 import numpy as np
-from imutils.object_detection import non_max_suppression
-import imutils
 import cv2
 import time
 
@@ -35,39 +33,11 @@ HAND = 2
 SCREEN_WIDTH = -1
 SCREEN_HEIGHT = -1
 SCREEN_SIZE = -1
-# return true if rectangle r is inside rectangle q      
-def inside(r, q):
-    rx, ry, rw, rh = r
-    qx, qy, qw, qh = q
-    return rx > qx and ry > qy and rx + rw < qx + qw and ry + rh < qy + qh
-
-
-def draw_detections(img, rects, thickness = 1, color = (0,255,0)):
-    for x, y, w, h in rects:
-        # the HOG detector returns slightly larger rectangles than the real objects.
-        # so we slightly shrink the rectangles to get a nicer output.
-        pad_w, pad_h = int(0.15*w), int(0.05*h)
-        cv2.rectangle(img, (x+pad_w, y+pad_h), (x+w-pad_w, y+h-pad_h), color, thickness)
 
 # detectArm detect right arm only
 # fgmask = the image after apply background subtractor 
 # target = the vector that define the area of the "people body" [[x,y,w,h]]
 # area = the size of target area (int)
-def detectArm(adjustedTarget,target,area):
-    # extract the right arm 
-    # number of pixel that needs to be white:
-    white = (area / 4)/20
-    # expand target width to make sure that it includes arms
-    
-    print("enter detectArm function")
-    print("adjustedTarget = {}".format(adjustedTarget))
-    white_locations = cv2.findNonZero(adjustedTarget)
-    if((white_locations == None) or( len(white_locations) >= white)):
-        print("detected right arm movement!!!")
-        return True
-    print("no arm movement")
-    return False
-
 def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object = BODY):
     new, contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         
@@ -203,13 +173,8 @@ if __name__ == '__main__':
         img = cv2.resize(img, (320,240))
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray,(5,5),0)
-        # cv2.erode(blur,None)
-        # cv2.dilate(blur,None)
-        # blur = cv2.blur(gray,(5,5))
         fgmask = fgbg.apply(blur)
-        # print ("len(fgmask) ={}".format(type(fgmask)))
         ret,thresh1 = cv2.threshold(blur,70,255,cv2.THRESH_BINARY_INV)
-        # print ("len(thresh1) ={}".format(type(thresh1)))
         mask2 = fgmask.copy()
         # contour_thres = analyze(img,thresh1,deq)
         contour_backg = analyze(img,mask2,deq, ORANGE,NEON_BLUE, PINK, object = HAND)
