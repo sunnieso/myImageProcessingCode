@@ -136,8 +136,8 @@ def analyze(img,mask, deq, color1 = GREEN, color2 = RED, color3 = BLUE, object =
 
 if __name__ == '__main__':
     import sys
-    from glob import glob
-    import itertools as it
+    # from glob import glob
+    # import itertools as it
     from collections import deque 
     print(__doc__)
 
